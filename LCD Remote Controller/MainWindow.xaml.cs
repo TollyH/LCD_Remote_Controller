@@ -16,7 +16,6 @@ namespace LCD_Remote_Controller
     public partial class MainWindow : Window, IDisposable
     {
         private const string configPath = "serial_config.json";
-        private static readonly char[] newlines = new[] { '\n', '\r' };
 
         private readonly SerialPort serialPort;
 
@@ -123,12 +122,12 @@ namespace LCD_Remote_Controller
                 serialPort.WriteLine("#raw_tx 1 00100011");
                 writeLine.Text = writeLine.Text[1..];
             }
-            string[] lines = writeLine.Text.Split(newlines, 2);
+            string[] lines = writeLine.Text.ReplaceLineEndings("\n").Split('\n', 2);
             if (lines.Length == 2)
             {
-                serialPort.WriteLine(lines[0]);
+                serialPort.WriteLine(lines[0].TrimEnd('\n'));
                 serialPort.WriteLine("#newline");
-                serialPort.WriteLine(lines[1]);
+                serialPort.WriteLine(lines[1].TrimEnd('\n'));
             }
             else
             {
