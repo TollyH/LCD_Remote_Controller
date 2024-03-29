@@ -1,108 +1,210 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
+using System.IO;
+using System.IO.Ports;
 using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Web;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Newtonsoft.Json;
 
 namespace LCD_Remote_Controller
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDisposable
     {
-        public readonly string RootDomain;
-        public readonly HttpClient WebConnect = new HttpClient();
+        private const string configPath = "serial_config.json";
+        private static readonly char[] newlines = new[] { '\n', '\r' };
+
+        private readonly SerialPort serialPort;
+
+        private readonly Timer serialConsoleTimer = new(100);
 
         public MainWindow()
         {
-            InitializeComponent();
-            RootDomain = "http://" + Interaction.InputBox("Enter domain to connect to", "Domain entry");
-            if (RootDomain == "http://")
+            SerialConfig serialConfig;
+            if (!File.Exists(configPath))
             {
-                MessageBox.Show("You must enter a domain", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                serialConfig = new SerialConfig("COM5");
+                File.WriteAllText(configPath, JsonConvert.SerializeObject(serialConfig, Formatting.Indented));
+
+                _ = MessageBox.Show(this, $"Please edit {configPath} with your serial port settings, then launch the app again.",
+                    "First time config", MessageBoxButton.OK, MessageBoxImage.Information);
+
                 Environment.Exit(1);
             }
-            WebConnect.PostAsync(RootDomain + "/clear", null);
-            System.Threading.Thread.Sleep(50);
-            WebConnect.PostAsync(RootDomain + "/display_set?d=0&c=0&b=0", null);
-            System.Threading.Thread.Sleep(50);
-            WebConnect.PostAsync(RootDomain + "/backlight?var=0", null);
+            serialConfig = JsonConvert.DeserializeObject<SerialConfig>(File.ReadAllText(configPath));
+
+            try
+            {
+                serialPort = new(
+                    serialConfig.Device, serialConfig.BaudRate, serialConfig.ParityBits, serialConfig.DataBits, serialConfig.StopBits)
+                {
+                    NewLine = serialConfig.NewLine,
+                    RtsEnable = true,
+                    DtrEnable = true
+                };
+                serialPort.Open();
+
+                serialPort.WriteLine("");
+                serialPort.DiscardOutBuffer();
+                serialPort.DiscardInBuffer();
+
+                serialPort.WriteLine("#help");
+                serialPort.WriteLine("#init 2 8");
+            }
+            catch (Exception exc)
+            {
+                _ = MessageBox.Show(this, $"There was an error communicating over the serial port. Please ensure that the settings in {configPath} are correct." +
+                    $"\n\n{exc}", "Serial communication error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Environment.Exit(1);
+            }
+
+            InitializeComponent();
+            SetDisplayOptions();
+
+            serialConsoleTimer.Elapsed += SerialConsoleTimer_Elapsed;
+            serialConsoleTimer.Start();
+        }
+
+        ~MainWindow()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            serialPort.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private void ClearDisplay_Click(object sender, RoutedEventArgs e)
         {
-            WebConnect.PostAsync(RootDomain + "/clear", null);
+            serialPort.WriteLine("#clear");
         }
 
         private void ReturnHome_Click(object sender, RoutedEventArgs e)
         {
-            WebConnect.PostAsync(RootDomain + "/home", null);
+            serialPort.WriteLine("#home");
+        }
+
+        private void SetDisplayOptions()
+        {
+            string display = enableDisplay.IsChecked ?? false ? "1" : "0";
+            string cursor = enableCursor.IsChecked ?? false ? "1" : "0";
+            string blink = enableCursorBlinking.IsChecked ?? false ? "1" : "0";
+            string backlight = enableBacklight.IsChecked ?? false ? "1" : "0";
+
+            serialPort.WriteLine($"#set {display} {cursor} {blink}");
+            serialPort.WriteLine($"#backlight {backlight}");
         }
 
         private void DisplayOptions_Click(object sender, RoutedEventArgs e)
         {
-            WebConnect.PostAsync(RootDomain + string.Format("/display_set?d={0}&c={1}&b={2}",
-                EnableDisplay.IsChecked.Value ? "1" : "0", EnableCursor.IsChecked.Value ? "1" : "0", EnableCursorBlinking.IsChecked.Value ? "1" : "0"), null);
-            WebConnect.PostAsync(RootDomain + "/backlight?var=" + (EnableBacklight.IsChecked.Value ? "1" : "0"), null);
+            SetDisplayOptions();
         }
 
         private void ScrollButton_Click(object sender, RoutedEventArgs e)
         {
-            Button SendingButton = (Button)sender;
-            WebConnect.PostAsync(RootDomain + string.Format("/scroll?cs={0}&lr={1}",
-                SendingButton.Name.Contains("Screen") ? "1" : "0", SendingButton.Name.Contains("Right") ? "1" : "0"), null);
+            if (sender is FrameworkElement sendingButton)
+            {
+                serialPort.WriteLine($"#scroll {sendingButton.Tag}");
+            }
         }
 
         private void WriteSend_Click(object sender, RoutedEventArgs e)
         {
-            WebConnect.PostAsync(RootDomain + "/clear", null);
-            System.Threading.Thread.Sleep(50);
-            WebConnect.PostAsync(RootDomain + "/write?message=" + HttpUtility.UrlEncode(WriteLineOne.Text.PadRight(16) + WriteLineTwo.Text), null);
+            while (writeLine.Text[0] == '#')
+            {
+                // Text to write starts with '#'.
+                // We need to write the '#' manually so that the controller doesn't interpret the text as a command.
+                serialPort.WriteLine("#raw_tx 1 00100011");
+                writeLine.Text = writeLine.Text[1..];
+            }
+            string[] lines = writeLine.Text.Split(newlines, 2);
+            if (lines.Length == 2)
+            {
+                serialPort.WriteLine(lines[0]);
+                serialPort.WriteLine("#newline");
+                serialPort.WriteLine(lines[1]);
+            }
+            else
+            {
+                serialPort.WriteLine(lines[0]);
+            }
         }
 
         private void CustomCharInsert_Click(object sender, RoutedEventArgs e)
         {
-            Match RegexResult = Regex.Match(((Button)sender).Name, "CustomCharLine([1-2])Char([1-8])");
-            if (RegexResult.Groups[1].Value == "1")
+            if (sender is FrameworkElement sendingButton)
             {
-                if (WriteLineOne.Text.Length < 16)
-                {
-                    WriteLineOne.Text += Convert.ToChar(0xE000 + int.Parse(RegexResult.Groups[2].Value) - 1);
-                }
-            }
-            else if (RegexResult.Groups[1].Value == "2")
-            {
-                if (WriteLineTwo.Text.Length < 16)
-                {
-                    WriteLineTwo.Text += Convert.ToChar(0xE000 + int.Parse(RegexResult.Groups[2].Value) - 1);
-                }
+                serialPort.WriteLine($"#write_custom {sendingButton.Tag}");
             }
         }
 
         private void CustomCharSave_Click(object sender, RoutedEventArgs e)
         {
-            string PixelArray = "";
-            foreach (CheckBox pixel in CharContainer.Children.OfType<CheckBox>())
+            object? selectedChar = (customCharNumberPicker.SelectedItem as ComboBoxItem)?.Tag;
+
+            string pixelArray = "";
+            int i = 0;
+            foreach (CheckBox pixel in charContainer.Children.OfType<CheckBox>())
             {
-                PixelArray += Convert.ToInt32(pixel.IsChecked.Value);
+                pixelArray += pixel.IsChecked ?? false ? "1" : "0";
+                if (++i % 5 == 0)
+                {
+                    pixelArray += ' ';
+                }
             }
-            WebConnect.PostAsync(RootDomain + string.Format("/custom_char?pixel_array={0}&char_number={1}", PixelArray, CustomCharNumberPicker.Text), null);
+
+            serialPort.WriteLine($"#def_custom {selectedChar} {pixelArray}");
+        }
+
+        private void TransmitButton_Click(object sender, RoutedEventArgs e)
+        {
+            string rsPin = rs.IsChecked ?? false ? "1" : "0";
+
+            string d0Pin = d0.IsChecked ?? false ? "1" : "0";
+            string d1Pin = d1.IsChecked ?? false ? "1" : "0";
+            string d2Pin = d2.IsChecked ?? false ? "1" : "0";
+            string d3Pin = d3.IsChecked ?? false ? "1" : "0";
+            string d4Pin = d4.IsChecked ?? false ? "1" : "0";
+            string d5Pin = d5.IsChecked ?? false ? "1" : "0";
+            string d6Pin = d6.IsChecked ?? false ? "1" : "0";
+            string d7Pin = d7.IsChecked ?? false ? "1" : "0";
+
+            serialPort.WriteLine($"#raw_tx {rsPin} {d7Pin}{d6Pin}{d5Pin}{d4Pin}{d3Pin}{d2Pin}{d1Pin}{d0Pin}");
         }
 
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
-            CheckBox SenderCheckBox = (CheckBox)sender;
-            SenderCheckBox.Background = SenderCheckBox.IsChecked.Value ? Brushes.Black : Brushes.White;
+            if (sender is CheckBox senderCheckBox)
+            {
+                senderCheckBox.Background = senderCheckBox.IsChecked ?? false ? Brushes.Black : Brushes.White;
+            }
         }
 
-        private void AdvancedButton_Click(object sender, RoutedEventArgs e)
+        private void MoveCursorButton_Click(object sender, RoutedEventArgs e)
         {
-            new AdvancedWindow(this).Show();
+            object? selectedLine = (cursorLine.SelectedItem as ComboBoxItem)?.Content;
+            object? selectedOffset = (cursorPosition.SelectedItem as ComboBoxItem)?.Content;
+
+            serialPort.WriteLine($"#setpos {selectedLine} {selectedOffset}");
+        }
+
+        private void SerialConsoleTimer_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            string newText = serialPort.ReadExisting();
+            Dispatcher.Invoke(() =>
+            {
+                if (newText.Length > 0)
+                {
+                    serialConsole.Text += newText;
+                    serialConsoleScroll.ScrollToBottom();
+                }
+            });
         }
     }
 }

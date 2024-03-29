@@ -5,143 +5,187 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LCD_Remote_Controller"
         mc:Ignorable="d"
-        Title="LCD Remote Controller" Height="300" Width="600" ResizeMode="CanMinimize">
-    <StackPanel Orientation="Horizontal">
-        <StackPanel x:Name="LeftPanel" HorizontalAlignment="Left" VerticalAlignment="Top">
+        Title="LCD Remote Controller" ResizeMode="CanMinimize" SizeToContent="WidthAndHeight">
+    <StackPanel Orientation="Horizontal" Margin="10">
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-                <Border x:Name="BasicCommands" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
+                <Border x:Name="basicCommands" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="Basic Commands" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel Orientation="Horizontal">
-                            <Button x:Name="ClearDisplay" Content="Clear Display" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="5" Margin="5,0" Click="ClearDisplay_Click"/>
-                            <Button x:Name="ReturnHome" Content="Return Home" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="5" Margin="5,0" Click="ReturnHome_Click"/>
+                            <Button Content="Clear Display" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="5" Margin="5,0" Click="ClearDisplay_Click"/>
+                            <Button Content="Return Home" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="5" Margin="5,0" Click="ReturnHome_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
-                <Border x:Name="Scrolling" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1" Width="{Binding ActualWidth, ElementName=WriteMessage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=BasicCommands, Mode=OneWay}">
+                <Border Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1" Width="{Binding ActualWidth, ElementName=writeMessage, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=basicCommands, Mode=OneWay}">
                     <StackPanel>
                         <TextBlock Text="Scrolling" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Button x:Name="ScrollScreenLeft" Content="&lt;&lt;" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Screen Left" Click="ScrollButton_Click"/>
-                            <Button x:Name="ScrollCursorLeft" Content="&lt;" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Cursor Left" Click="ScrollButton_Click"/>
-                            <Button x:Name="ScrollCursorRight" Content=">" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Cursor Right" Click="ScrollButton_Click"/>
-                            <Button x:Name="ScrollScreenRight" Content=">>" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Screen Right" Click="ScrollButton_Click"/>
+                            <Button Content="&lt;&lt;" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Screen Left" Tag="s l" Click="ScrollButton_Click"/>
+                            <Button Content="&lt;" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Cursor Left" Tag="c l" Click="ScrollButton_Click"/>
+                            <Button Content=">" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Cursor Right" Tag="c r" Click="ScrollButton_Click"/>
+                            <Button Content=">>" Margin="5,0" Padding="5" Width="28" ToolTip="Scroll Screen Right" Tag="s r" Click="ScrollButton_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
-                <Border x:Name="DisplayOptions" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1" Width="{Binding ActualWidth, ElementName=BasicCommands}" Height="{Binding ActualHeight, ElementName=WriteMessage, Mode=OneWay}">
+                <Border Margin="0,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1" Width="{Binding ActualWidth, ElementName=basicCommands}" Height="{Binding ActualHeight, ElementName=writeMessage, Mode=OneWay}">
                     <StackPanel>
                         <TextBlock Text="Display Options" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel>
-                            <CheckBox x:Name="EnableDisplay" Content="Enable Display" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
-                            <CheckBox x:Name="EnableCursor" Content="Enable Cursor" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
-                            <CheckBox x:Name="EnableCursorBlinking" Content="Enable Cursor Blinking" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
-                            <CheckBox x:Name="EnableBacklight" Content="Enable Backlight" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
+                            <CheckBox x:Name="enableDisplay" Content="Enable Display" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click" IsChecked="True"/>
+                            <CheckBox x:Name="enableCursor" Content="Enable Cursor" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
+                            <CheckBox x:Name="enableCursorBlinking" Content="Enable Cursor Blinking" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click"/>
+                            <CheckBox x:Name="enableBacklight" Content="Enable Backlight" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Click="DisplayOptions_Click" IsChecked="True"/>
                         </StackPanel>
-                        <Button x:Name="AdvancedButton" Content="Advanced" Margin="5" Click="AdvancedButton_Click"/>
                     </StackPanel>
                 </Border>
-                <Border x:Name="WriteMessage" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
+                <Border x:Name="writeMessage" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="Write Message" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
+                        <TextBlock Text="Write Text" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel Orientation="Vertical">
                             <StackPanel>
-                                <TextBox x:Name="WriteLineOne" Text="Line 1" MaxLength="16" FontFamily="Consolas" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" FontSize="16" Width="147"/>
-                                <TextBox x:Name="WriteLineTwo" Text="Line 2" MaxLength="16" FontFamily="Consolas" Width="147" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0" FontSize="16"/>
-                                <Button x:Name="WriteSend" Content="Send" Padding="5,3" Margin="5" VerticalAlignment="Top" HorizontalAlignment="Left" Click="WriteSend_Click"/>
+                                <TextBox x:Name="writeLine" Text="Enter Text" FontFamily="Consolas" VerticalAlignment="Top" Margin="5,0" FontSize="16" Height="40" Width="150" AcceptsReturn="True" MaxLines="2"/>
+                                <Button Content="Send" Padding="5,3" Margin="5" VerticalAlignment="Top" HorizontalAlignment="Left" Click="WriteSend_Click"/>
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
                                 <TextBlock Text="Insert Custom Character" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" FontWeight="Bold"/>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Line 1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0"/>
-                                    <Button x:Name="CustomCharLine1Char1" Content="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char2" Content="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char3" Content="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char4" Content="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char5" Content="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char6" Content="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char7" Content="7" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine1Char8" Content="8" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                    <TextBlock Text="Line 2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0"/>
-                                    <Button x:Name="CustomCharLine2Char1" Content="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char2" Content="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char3" Content="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char4" Content="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char5" Content="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char6" Content="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char7" Content="7" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button x:Name="CustomCharLine2Char8" Content="8" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="1" Tag="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="2" Tag="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="3" Tag="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="4" Tag="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="5" Tag="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="6" Tag="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="7" Tag="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="8" Tag="7" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </StackPanel>
-        <Border x:Name="CustomCharacter" Margin="10,10,0,0" BorderBrush="DarkGray" BorderThickness="1" Padding="5" HorizontalAlignment="Left" VerticalAlignment="Top" Height="244">
-            <StackPanel>
-                <TextBlock Text="Custom Character" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Character Number:" Margin="5"/>
-                    <ComboBox x:Name="CustomCharNumberPicker" Margin="5" SelectedIndex="0">
-                        <ComboBoxItem Content="1"/>
-                        <ComboBoxItem Content="2"/>
-                        <ComboBoxItem Content="3"/>
-                        <ComboBoxItem Content="4"/>
-                        <ComboBoxItem Content="5"/>
-                        <ComboBoxItem Content="6"/>
-                        <ComboBoxItem Content="7"/>
-                        <ComboBoxItem Content="8"/>
-                    </ComboBox>
+            <Border Margin="0,10,0,0" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Raw Data Transmission" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold" Foreground="Red"/>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="rs" Content="rs" Margin="5,5,5,5"/>
+                        <CheckBox x:Name="d7" Content="d7" Margin="2,5"/>
+                        <CheckBox x:Name="d6" Content="d6" Margin="2,5"/>
+                        <CheckBox x:Name="d5" Content="d5" Margin="2,5"/>
+                        <CheckBox x:Name="d4" Content="d4" Margin="2,5"/>
+                        <CheckBox x:Name="d3" Content="d3" Margin="2,5"/>
+                        <CheckBox x:Name="d2" Content="d2" Margin="2,5"/>
+                        <CheckBox x:Name="d1" Content="d1" Margin="2,5"/>
+                        <CheckBox x:Name="d0" Content="d0" Margin="2,5,5,5"/>
+                    </StackPanel>
+                    <Button Content="Transmit" Margin="5" Click="TransmitButton_Click"/>
                 </StackPanel>
-                <WrapPanel x:Name="CharContainer" Margin="5" HorizontalAlignment="Center" Width="80">
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                    <CheckBox Click="CheckBox_Click"/>
-                </WrapPanel>
-                <Button x:Name="CustomCharSave" Content="Save" Margin="5" VerticalAlignment="Bottom" Click="CustomCharSave_Click"/>
-            </StackPanel>
+            </Border>
+        </StackPanel>
+        <StackPanel Orientation="Vertical">
+            <Border Margin="10,0,10,0" BorderBrush="DarkGray" BorderThickness="1" Padding="5" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Custom Character" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Character Number:" Margin="5"/>
+                        <ComboBox x:Name="customCharNumberPicker" Margin="5" SelectedIndex="0">
+                            <ComboBoxItem Content="1" Tag="0"/>
+                            <ComboBoxItem Content="2" Tag="1"/>
+                            <ComboBoxItem Content="3" Tag="2"/>
+                            <ComboBoxItem Content="4" Tag="3"/>
+                            <ComboBoxItem Content="5" Tag="4"/>
+                            <ComboBoxItem Content="6" Tag="5"/>
+                            <ComboBoxItem Content="7" Tag="6"/>
+                            <ComboBoxItem Content="8" Tag="7"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <WrapPanel x:Name="charContainer" Margin="5" HorizontalAlignment="Center" Width="80">
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Click="CheckBox_Click"/>
+                    </WrapPanel>
+                    <Button Content="Save" Margin="5" VerticalAlignment="Bottom" Click="CustomCharSave_Click"/>
+                </StackPanel>
+            </Border>
+            <Border Margin="10,10,10,0" BorderBrush="DarkGray" BorderThickness="1" Padding="5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Set Cursor Position" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Line:"/>
+                        <ComboBox x:Name="cursorLine" SelectedIndex="0" VerticalAlignment="Center">
+                            <ComboBoxItem Content="1"/>
+                            <ComboBoxItem Content="2"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Offset:"/>
+                        <ComboBox x:Name="cursorPosition" SelectedIndex="0" VerticalAlignment="Center">
+                            <ComboBoxItem Content="0"/>
+                            <ComboBoxItem Content="1"/>
+                            <ComboBoxItem Content="2"/>
+                            <ComboBoxItem Content="3"/>
+                            <ComboBoxItem Content="4"/>
+                            <ComboBoxItem Content="5"/>
+                            <ComboBoxItem Content="6"/>
+                            <ComboBoxItem Content="7"/>
+                            <ComboBoxItem Content="8"/>
+                            <ComboBoxItem Content="9"/>
+                            <ComboBoxItem Content="10"/>
+                            <ComboBoxItem Content="11"/>
+                            <ComboBoxItem Content="12"/>
+                            <ComboBoxItem Content="13"/>
+                            <ComboBoxItem Content="14"/>
+                            <ComboBoxItem Content="15"/>
+                        </ComboBox>
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Move" Padding="5,1,5,1" Click="MoveCursorButton_Click" Margin="30,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        <Border Margin="5,0,10,0" BorderBrush="DarkGray" BorderThickness="1" Width="300" Height="320">
+            <ScrollViewer x:Name="serialConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                <TextBlock x:Name="serialConsole" FontFamily="Consolas"/>
+            </ScrollViewer>
         </Border>
     </StackPanel>
 </Window>
