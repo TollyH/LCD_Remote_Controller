@@ -47,20 +47,27 @@
                         <TextBlock Text="Write Text" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel Orientation="Vertical">
                             <StackPanel>
-                                <TextBox x:Name="writeLine" Text="Enter Text" FontFamily="Consolas" VerticalAlignment="Top" Margin="5,0" FontSize="16" Height="40" Width="150" AcceptsReturn="True" MaxLines="2"/>
-                                <Button Content="Send" Padding="5,3" Margin="5" VerticalAlignment="Top" HorizontalAlignment="Left" Click="WriteSend_Click"/>
+                                <TextBox x:Name="writeBox" Text="Enter Text" FontFamily="Consolas" VerticalAlignment="Top" Margin="5,0" FontSize="16" Height="40" Width="150" AcceptsReturn="True" MaxLines="2"/>
+                                <Grid Margin="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="Write" Padding="5,3" VerticalAlignment="Top" HorizontalAlignment="Left" Click="TextWrite_Click"/>
+                                    <Button Grid.Column="1" Content="Read" Padding="5,3" VerticalAlignment="Top" HorizontalAlignment="Right" Click="TextRead_Click"/>
+                                </Grid>
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
-                                <TextBlock Text="Insert Custom Character" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" FontWeight="Bold"/>
+                                <TextBlock Text="Insert Custom Character" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,5,5" FontWeight="Bold"/>
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Content="1" Tag="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="2" Tag="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="3" Tag="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="4" Tag="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="5" Tag="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="6" Tag="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="7" Tag="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
-                                    <Button Content="8" Tag="7" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Click="CustomCharInsert_Click"/>
+                                    <Button Content="1" Tag="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,0,1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="2" Tag="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="3" Tag="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="4" Tag="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="5" Tag="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="6" Tag="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="7" Tag="6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
+                                    <Button Content="8" Tag="7" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,0" Padding="3,0" Width="15" Click="CustomCharInsert_Click"/>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
@@ -69,9 +76,9 @@
             </StackPanel>
             <Border Margin="0,10,0,0" VerticalAlignment="Top" BorderBrush="DarkGray" Padding="5" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Raw Data Transmission" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold" Foreground="Red"/>
+                    <TextBlock Text="Raw Data Transfer" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold" Foreground="Red"/>
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox x:Name="rs" Content="rs" Margin="5,5,5,5"/>
+                        <CheckBox x:Name="rs" Content="rs" Margin="5,5,15,5" FontWeight="Bold"/>
                         <CheckBox x:Name="d7" Content="d7" Margin="2,5"/>
                         <CheckBox x:Name="d6" Content="d6" Margin="2,5"/>
                         <CheckBox x:Name="d5" Content="d5" Margin="2,5"/>
@@ -81,7 +88,14 @@
                         <CheckBox x:Name="d1" Content="d1" Margin="2,5"/>
                         <CheckBox x:Name="d0" Content="d0" Margin="2,5,5,5"/>
                     </StackPanel>
-                    <Button Content="Transmit" Margin="5" Click="TransmitButton_Click"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Transmit" Margin="5" Click="TransmitButton_Click"/>
+                        <Button Grid.Column="1" Content="Receive" Margin="5" Click="ReceiveButton_Click"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </StackPanel>
@@ -103,48 +117,55 @@
                         </ComboBox>
                     </StackPanel>
                     <WrapPanel x:Name="charContainer" Margin="5" HorizontalAlignment="Center" Width="80">
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
-                        <CheckBox Click="CheckBox_Click"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
+                        <CheckBox Checked="CustomPixel_Checked" Unchecked="CustomPixel_Unchecked"/>
                     </WrapPanel>
-                    <Button Content="Save" Margin="5" VerticalAlignment="Bottom" Click="CustomCharSave_Click"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Save" Margin="5,0,5,0" Padding="5,1,5,1" VerticalAlignment="Center" Click="CustomCharSave_Click"/>
+                        <Button Grid.Column="1" Content="Load" Margin="5,0,5,0" Padding="5,1,5,1" VerticalAlignment="Center" Click="CustomCharLoad_Click"/>
+                    </Grid>
                 </StackPanel>
             </Border>
             <Border Margin="10,10,10,0" BorderBrush="DarkGray" BorderThickness="1" Padding="5">
@@ -156,6 +177,7 @@
                             <ComboBoxItem Content="1"/>
                             <ComboBoxItem Content="2"/>
                         </ComboBox>
+                        <Button VerticalAlignment="Bottom" Content="Get" Padding="5,1,5,1" Click="GetCursorButton_Click" Margin="40,0,0,0" Width="42"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Offset:"/>
@@ -177,15 +199,21 @@
                             <ComboBoxItem Content="14"/>
                             <ComboBoxItem Content="15"/>
                         </ComboBox>
-                        <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Move" Padding="5,1,5,1" Click="MoveCursorButton_Click" Margin="30,0,0,0"/>
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Move" Padding="5,1,5,1" Click="MoveCursorButton_Click" Margin="30,0,0,0" Width="42"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>
-        <Border Margin="5,0,10,0" BorderBrush="DarkGray" BorderThickness="1" Width="300" Height="320">
-            <ScrollViewer x:Name="serialConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
-                <TextBlock x:Name="serialConsole" FontFamily="Consolas"/>
-            </ScrollViewer>
-        </Border>
+        <StackPanel Orientation="Vertical">
+            <Border Margin="5,0,10,10" BorderBrush="DarkGray" BorderThickness="1" Width="300" Height="290">
+                <ScrollViewer x:Name="serialConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                    <TextBlock x:Name="serialConsole" FontFamily="Consolas"/>
+                </ScrollViewer>
+            </Border>
+            <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                <TextBox x:Name="serialConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250"/>
+                <Button Margin="5,0,0,0" Content="Send" Padding="5,1,5,1" Width="45" Click="SerialSendButton_Click"/>
+            </StackPanel>
+        </StackPanel>
     </StackPanel>
 </Window>

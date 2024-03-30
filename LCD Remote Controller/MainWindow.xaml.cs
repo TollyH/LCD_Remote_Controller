@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +17,7 @@ namespace LCD_Remote_Controller
     public partial class MainWindow : Window, IDisposable
     {
         private const string configPath = "serial_config.json";
+        private const string consoleReadyPrompt = "\n> ";
 
         private readonly SerialPort serialPort;
 
@@ -38,7 +40,7 @@ namespace LCD_Remote_Controller
 
             try
             {
-                serialPort = new(
+                serialPort = new SerialPort(
                     serialConfig.Device, serialConfig.BaudRate, serialConfig.ParityBits, serialConfig.DataBits, serialConfig.StopBits)
                 {
                     NewLine = serialConfig.NewLine,
@@ -79,6 +81,51 @@ namespace LCD_Remote_Controller
             GC.SuppressFinalize(this);
         }
 
+        public void StartSerialInputCapture()
+        {
+            serialConsoleTimer.Stop();
+            ReadSerialDataToConsole();
+        }
+
+        public string EndSerialInputCapture(bool waitForCommandFinish)
+        {
+            string newText = "";
+            do
+            {
+                newText += serialPort.ReadExisting();
+            } while (waitForCommandFinish && !newText.EndsWith(consoleReadyPrompt, StringComparison.Ordinal));
+
+            AddTextToConsole(newText);
+            serialConsoleTimer.Start();
+
+            return newText;
+        }
+
+        public void ReadSerialDataToConsole()
+        {
+            AddTextToConsole(serialPort.ReadExisting());
+        }
+
+        public static string GetCommandOutput(string serialText)
+        {
+            string[] lines = serialText.ReplaceLineEndings("\n").Replace(consoleReadyPrompt, "").Trim('\n').Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].TrimEnd();
+            }
+
+            return lines.Length == 0 ? "" : string.Join('\n', lines[1..]);
+        }
+
+        private void AddTextToConsole(string text)
+        {
+            if (text.Length > 0)
+            {
+                serialConsole.Text += text;
+                serialConsoleScroll.ScrollToBottom();
+            }
+        }
+
         private void ClearDisplay_Click(object sender, RoutedEventArgs e)
         {
             serialPort.WriteLine("#clear");
@@ -113,26 +160,29 @@ namespace LCD_Remote_Controller
             }
         }
 
-        private void WriteSend_Click(object sender, RoutedEventArgs e)
+        private void TextWrite_Click(object sender, RoutedEventArgs e)
         {
-            while (writeLine.Text[0] == '#')
-            {
-                // Text to write starts with '#'.
-                // We need to write the '#' manually so that the controller doesn't interpret the text as a command.
-                serialPort.WriteLine("#raw_tx 1 00100011");
-                writeLine.Text = writeLine.Text[1..];
-            }
-            string[] lines = writeLine.Text.ReplaceLineEndings("\n").Split('\n', 2);
+            string[] lines = writeBox.Text.ReplaceLineEndings("\n").Split('\n', 2);
+            // '#' should be written manually so that the controller doesn't interpret the text as a command.
             if (lines.Length == 2)
             {
-                serialPort.WriteLine(lines[0].TrimEnd('\n'));
+                serialPort.WriteLine(lines[0].TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
                 serialPort.WriteLine("#newline");
-                serialPort.WriteLine(lines[1].TrimEnd('\n'));
+                serialPort.WriteLine(lines[1].TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
             }
             else
             {
-                serialPort.WriteLine(lines[0]);
+                serialPort.WriteLine(lines[0].Replace("#", "#raw_tx 1 00100011\n"));
             }
+        }
+
+        private void TextRead_Click(object sender, RoutedEventArgs e)
+        {
+            StartSerialInputCapture();
+            serialPort.WriteLine("#read");
+            string rawOutput = EndSerialInputCapture(true);
+
+            writeBox.Text = GetCommandOutput(rawOutput);
         }
 
         private void CustomCharInsert_Click(object sender, RoutedEventArgs e)
@@ -161,6 +211,46 @@ namespace LCD_Remote_Controller
             serialPort.WriteLine($"#def_custom {selectedChar} {pixelArray}");
         }
 
+        private void CustomCharLoad_Click(object sender, RoutedEventArgs e)
+        {
+            object? selectedChar = (customCharNumberPicker.SelectedItem as ComboBoxItem)?.Tag;
+
+            StartSerialInputCapture();
+            serialPort.WriteLine($"#read_custom {selectedChar}");
+            string rawOutput = EndSerialInputCapture(true);
+
+            string output = GetCommandOutput(rawOutput);
+            if (output.Length == 0)
+            {
+                return;
+            }
+
+            string[] lines = output.Split(' ');
+            if (lines.Length < 8)
+            {
+                return;
+            }
+
+            CheckBox[] pixelCheckBoxes = charContainer.Children.OfType<CheckBox>().ToArray();
+            for (int i = 0; i < 8; i++)
+            {
+                string line = lines[i];
+                if (line.Length < 5)
+                {
+                    continue;
+                }
+                if (line.Length > 5)
+                {
+                    // Only consider the lowest 5 binary digits if there are more
+                    line = string.Concat(line.TakeLast(5));
+                }
+                for (int j = 0; j < 5; j++)
+                {
+                    pixelCheckBoxes[i * 5 + j].IsChecked = line[j] == '1';
+                }
+            }
+        }
+
         private void TransmitButton_Click(object sender, RoutedEventArgs e)
         {
             string rsPin = rs.IsChecked ?? false ? "1" : "0";
@@ -177,11 +267,49 @@ namespace LCD_Remote_Controller
             serialPort.WriteLine($"#raw_tx {rsPin} {d7Pin}{d6Pin}{d5Pin}{d4Pin}{d3Pin}{d2Pin}{d1Pin}{d0Pin}");
         }
 
-        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        private void ReceiveButton_Click(object sender, RoutedEventArgs e)
+        {
+            string rsPin = rs.IsChecked ?? false ? "1" : "0";
+
+            StartSerialInputCapture();
+            serialPort.WriteLine($"#raw_rx {rsPin}");
+            string rawOutput = EndSerialInputCapture(true);
+
+            string output = GetCommandOutput(rawOutput);
+            if (output.Length == 0)
+            {
+                return;
+            }
+            // Binary digits are the first component of the output
+            output = output.Split(' ')[0];
+            if (output.Length < 8)
+            {
+                return;
+            }
+
+            d0.IsChecked = output[7] == '1';
+            d1.IsChecked = output[6] == '1';
+            d2.IsChecked = output[5] == '1';
+            d3.IsChecked = output[4] == '1';
+            d4.IsChecked = output[3] == '1';
+            d5.IsChecked = output[2] == '1';
+            d6.IsChecked = output[1] == '1';
+            d7.IsChecked = output[0] == '1';
+        }
+
+        private void CustomPixel_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox senderCheckBox)
             {
-                senderCheckBox.Background = senderCheckBox.IsChecked ?? false ? Brushes.Black : Brushes.White;
+                senderCheckBox.Background = Brushes.Black;
+            }
+        }
+
+        private void CustomPixel_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox senderCheckBox)
+            {
+                senderCheckBox.Background = Brushes.White;
             }
         }
 
@@ -193,17 +321,34 @@ namespace LCD_Remote_Controller
             serialPort.WriteLine($"#setpos {selectedLine} {selectedOffset}");
         }
 
+        private void GetCursorButton_Click(object sender, RoutedEventArgs e)
+        {
+            StartSerialInputCapture();
+            serialPort.WriteLine("#getpos");
+            string rawOutput = EndSerialInputCapture(true);
+
+            string output = GetCommandOutput(rawOutput);
+            Match linePosMatch = Regex.Match(output, "line: ([0-9]+), offset: ([0-9]+)");
+            if (!linePosMatch.Success)
+            {
+                return;
+            }
+
+            cursorLine.SelectedIndex = linePosMatch.Groups[1].Value == "1" ? 0 : 1;
+            if (int.TryParse(linePosMatch.Groups[2].Value, out int offset))
+            {
+                cursorPosition.SelectedIndex = offset;
+            }
+        }
+
         private void SerialConsoleTimer_Elapsed(object? sender, ElapsedEventArgs e)
         {
-            string newText = serialPort.ReadExisting();
-            Dispatcher.Invoke(() =>
-            {
-                if (newText.Length > 0)
-                {
-                    serialConsole.Text += newText;
-                    serialConsoleScroll.ScrollToBottom();
-                }
-            });
+            Dispatcher.Invoke(ReadSerialDataToConsole);
+        }
+
+        private void SerialSendButton_Click(object sender, RoutedEventArgs e)
+        {
+            serialPort.WriteLine(serialConsoleInput.Text);
         }
     }
 }
