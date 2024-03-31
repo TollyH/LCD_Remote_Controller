@@ -54,7 +54,10 @@ namespace LCD_Remote_Controller
                 serialPort.DiscardInBuffer();
 
                 serialPort.WriteLine("#help");
-                serialPort.WriteLine("#init 2 8");
+                if (!Environment.GetCommandLineArgs().Contains("--no-init"))
+                {
+                    serialPort.WriteLine("#init 2 8");
+                }
             }
             catch (Exception exc)
             {
