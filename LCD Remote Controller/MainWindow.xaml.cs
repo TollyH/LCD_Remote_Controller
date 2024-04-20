@@ -166,17 +166,12 @@ namespace LCD_Remote_Controller
 
         private void TextWrite_Click(object sender, RoutedEventArgs e)
         {
-            string[] lines = writeBox.Text.ReplaceLineEndings("\n").Split('\n', 2);
-            // '#' should be written manually so that the controller doesn't interpret the text as a command.
-            if (lines.Length == 2)
+            string[] lines = writeBox.Text.ReplaceLineEndings("\n").Split('\n');
+            foreach (string line in lines)
             {
-                serialPort.WriteLine(lines[0].TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
+                // '#' should be written manually so that the controller doesn't interpret the text as a command.
+                serialPort.WriteLine(line.TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
                 serialPort.WriteLine("#newline");
-                serialPort.WriteLine(lines[1].TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
-            }
-            else
-            {
-                serialPort.WriteLine(lines[0].Replace("#", "#raw_tx 1 00100011\n"));
             }
         }
 
@@ -338,7 +333,10 @@ namespace LCD_Remote_Controller
                 return;
             }
 
-            cursorLine.SelectedIndex = linePosMatch.Groups[1].Value == "1" ? 0 : 1;
+            if (int.TryParse(linePosMatch.Groups[1].Value, out int line))
+            {
+                cursorLine.SelectedIndex = line - 1;
+            }
             if (int.TryParse(linePosMatch.Groups[2].Value, out int offset))
             {
                 cursorPosition.SelectedIndex = offset;
