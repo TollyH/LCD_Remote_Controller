@@ -56,6 +56,7 @@ namespace LCD_Remote_Controller
                 serialPort.WriteLine("#help");
                 if (!Environment.GetCommandLineArgs().Contains("--no-init"))
                 {
+                    serialPort.WriteLine("#set_size 4 20");
                     serialPort.WriteLine("#init 2 8");
                 }
             }

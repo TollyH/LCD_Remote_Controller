@@ -47,7 +47,7 @@
                         <TextBlock Text="Write Text" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                         <StackPanel Orientation="Vertical">
                             <StackPanel>
-                                <TextBox x:Name="writeBox" Text="Enter Text" FontFamily="Consolas" VerticalAlignment="Top" Margin="5,0" FontSize="16" Height="80" Width="190" AcceptsReturn="True" MaxLines="2"/>
+                                <TextBox x:Name="writeBox" Text="Enter Text" FontFamily="Consolas" VerticalAlignment="Top" Margin="5,0" FontSize="16" Height="80" Width="185" AcceptsReturn="True" MaxLines="2"/>
                                 <Grid Margin="5">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition/>
