@@ -56,7 +56,7 @@ namespace LCD_Remote_Controller
                 serialPort.WriteLine("#help");
                 if (!Environment.GetCommandLineArgs().Contains("--no-init"))
                 {
-                    serialPort.WriteLine("#set_size 4 20");
+                    serialPort.WriteLine($"#set_size {serialConfig.LCDHeight} {serialConfig.LCDWidth}");
                     serialPort.WriteLine("#init 2 8");
                 }
             }
@@ -69,6 +69,25 @@ namespace LCD_Remote_Controller
 
             InitializeComponent();
             SetDisplayOptions();
+
+            writeBox.Width = serialConfig.LCDWidth * 9 + 5;
+            writeBox.Height = serialConfig.LCDHeight * 20 + 5;
+
+            for (int i = 1; i <= serialConfig.LCDHeight; i++)
+            {
+                cursorLine.Items.Add(new ComboBoxItem()
+                {
+                    Content = i.ToString()
+                });
+            }
+
+            for (int i = 0; i < serialConfig.LCDWidth; i++)
+            {
+                cursorPosition.Items.Add(new ComboBoxItem()
+                {
+                    Content = i.ToString()
+                });
+            }
 
             serialConsoleTimer.Elapsed += SerialConsoleTimer_Elapsed;
             serialConsoleTimer.Start();

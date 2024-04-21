@@ -10,6 +10,8 @@ namespace LCD_Remote_Controller
         Parity ParityBits = Parity.None,
         int DataBits = 8,
         StopBits StopBits = StopBits.One,
-        string NewLine = "\r"
+        string NewLine = "\r",
+        byte LCDWidth = 16,
+        byte LCDHeight = 2
     );
 }

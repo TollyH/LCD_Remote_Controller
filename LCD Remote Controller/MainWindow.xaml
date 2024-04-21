@@ -99,7 +99,7 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-        <StackPanel Orientation="Vertical">
+        <StackPanel x:Name="heightRef" Orientation="Vertical">
             <Border Margin="10,0,10,0" BorderBrush="DarkGray" BorderThickness="1" Padding="5" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <StackPanel>
                     <TextBlock Text="Custom Character" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
@@ -173,53 +173,27 @@
                     <TextBlock Text="Set Cursor Position" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="5,0,0,5" FontWeight="Bold"/>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Line:"/>
-                        <ComboBox x:Name="cursorLine" SelectedIndex="0" VerticalAlignment="Center">
-                            <ComboBoxItem Content="1"/>
-                            <ComboBoxItem Content="2"/>
-                            <ComboBoxItem Content="3"/>
-                            <ComboBoxItem Content="4"/>
-                        </ComboBox>
+                        <ComboBox x:Name="cursorLine" SelectedIndex="0" VerticalAlignment="Center"/>
                         <Button VerticalAlignment="Bottom" Content="Get" Padding="5,1,5,1" Click="GetCursorButton_Click" Margin="40,0,0,0" Width="42"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Offset:"/>
-                        <ComboBox x:Name="cursorPosition" SelectedIndex="0" VerticalAlignment="Center">
-                            <ComboBoxItem Content="0"/>
-                            <ComboBoxItem Content="1"/>
-                            <ComboBoxItem Content="2"/>
-                            <ComboBoxItem Content="3"/>
-                            <ComboBoxItem Content="4"/>
-                            <ComboBoxItem Content="5"/>
-                            <ComboBoxItem Content="6"/>
-                            <ComboBoxItem Content="7"/>
-                            <ComboBoxItem Content="8"/>
-                            <ComboBoxItem Content="9"/>
-                            <ComboBoxItem Content="10"/>
-                            <ComboBoxItem Content="11"/>
-                            <ComboBoxItem Content="12"/>
-                            <ComboBoxItem Content="13"/>
-                            <ComboBoxItem Content="14"/>
-                            <ComboBoxItem Content="15"/>
-                            <ComboBoxItem Content="16"/>
-                            <ComboBoxItem Content="17"/>
-                            <ComboBoxItem Content="18"/>
-                            <ComboBoxItem Content="19"/>
-                        </ComboBox>
+                        <ComboBox x:Name="cursorPosition" SelectedIndex="0" VerticalAlignment="Center"/>
                         <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Move" Padding="5,1,5,1" Click="MoveCursorButton_Click" Margin="30,0,0,0" Width="42"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>
-        <StackPanel Orientation="Vertical">
-            <Border Margin="5,0,10,10" BorderBrush="DarkGray" BorderThickness="1" Width="300" Height="325">
+        <Grid Height="{Binding ActualHeight, ElementName=heightRef, Mode=OneWay}">
+            <Border Margin="5,0,10,30" BorderBrush="DarkGray" BorderThickness="1" Width="300">
                 <ScrollViewer x:Name="serialConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
                     <TextBlock x:Name="serialConsole" FontFamily="Consolas"/>
                 </ScrollViewer>
             </Border>
-            <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+            <StackPanel Orientation="Horizontal" Margin="5,0,0,0" VerticalAlignment="Bottom">
                 <TextBox x:Name="serialConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250"/>
                 <Button Margin="5,0,0,0" Content="Send" Padding="5,1,5,1" Width="45" Click="SerialSendButton_Click"/>
             </StackPanel>
-        </StackPanel>
+        </Grid>
     </StackPanel>
 </Window>
