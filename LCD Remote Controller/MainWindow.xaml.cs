@@ -20,12 +20,12 @@ namespace LCD_Remote_Controller
         private const string consoleReadyPrompt = "\n> ";
 
         private readonly SerialPort serialPort;
+        private readonly SerialConfig serialConfig;
 
         private readonly Timer serialConsoleTimer = new(100);
 
         public MainWindow()
         {
-            SerialConfig serialConfig;
             if (!File.Exists(configPath))
             {
                 serialConfig = new SerialConfig("COM5");
@@ -190,7 +190,10 @@ namespace LCD_Remote_Controller
             {
                 // '#' should be written manually so that the controller doesn't interpret the text as a command.
                 serialPort.WriteLine(line.TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
-                serialPort.WriteLine("#newline");
+                if (line.Length != serialConfig.LCDWidth)
+                {
+                    serialPort.WriteLine("#newline");
+                }
             }
         }
 
