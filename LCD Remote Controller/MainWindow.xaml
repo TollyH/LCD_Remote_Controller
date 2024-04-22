@@ -191,7 +191,7 @@
                 </ScrollViewer>
             </Border>
             <StackPanel Orientation="Horizontal" Margin="5,0,0,0" VerticalAlignment="Bottom">
-                <TextBox x:Name="serialConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250"/>
+                <TextBox x:Name="serialConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250" PreviewKeyDown="serialConsoleInput_PreviewKeyDown"/>
                 <Button Margin="5,0,0,0" Content="Send" Padding="5,1,5,1" Width="45" Click="SerialSendButton_Click"/>
             </StackPanel>
         </Grid>

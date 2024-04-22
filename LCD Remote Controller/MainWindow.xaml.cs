@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Newtonsoft.Json;
 
@@ -373,6 +374,14 @@ namespace LCD_Remote_Controller
         private void SerialSendButton_Click(object sender, RoutedEventArgs e)
         {
             serialPort.WriteLine(serialConsoleInput.Text);
+        }
+
+        private void serialConsoleInput_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                serialPort.WriteLine(serialConsoleInput.Text);
+            }
         }
     }
 }
