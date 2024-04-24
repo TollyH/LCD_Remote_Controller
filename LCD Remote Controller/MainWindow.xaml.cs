@@ -189,8 +189,14 @@ namespace LCD_Remote_Controller
             string[] lines = writeBox.Text.ReplaceLineEndings("\n").Split('\n');
             foreach (string line in lines)
             {
-                // '#' should be written manually so that the controller doesn't interpret the text as a command.
-                serialPort.WriteLine(line.TrimEnd('\n').Replace("#", "#raw_tx 1 00100011\n"));
+                int skip = 0;
+                while (line.StartsWith('#'))
+                {
+                    // Leading '#' should be written manually so that the controller doesn't interpret the text as a command.
+                    serialPort.WriteLine("#raw_tx 1 00100011");
+                    skip++;
+                }
+                serialPort.WriteLine(line[skip..].TrimEnd('\n'));
                 if (line.Length != serialConfig.LCDWidth)
                 {
                     serialPort.WriteLine("#newline");
