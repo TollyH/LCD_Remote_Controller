@@ -186,13 +186,13 @@
         </StackPanel>
         <Grid Height="{Binding ActualHeight, ElementName=heightRef, Mode=OneWay}">
             <Border Margin="5,0,10,30" BorderBrush="DarkGray" BorderThickness="1" Width="300">
-                <ScrollViewer x:Name="serialConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
-                    <TextBlock x:Name="serialConsole" FontFamily="Consolas"/>
+                <ScrollViewer x:Name="processConsoleScroll" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                    <TextBlock x:Name="processConsole" FontFamily="Consolas"/>
                 </ScrollViewer>
             </Border>
             <StackPanel Orientation="Horizontal" Margin="5,0,0,0" VerticalAlignment="Bottom">
-                <TextBox x:Name="serialConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250" PreviewKeyDown="serialConsoleInput_PreviewKeyDown"/>
-                <Button Margin="5,0,0,0" Content="Send" Padding="5,1,5,1" Width="45" Click="SerialSendButton_Click"/>
+                <TextBox x:Name="processConsoleInput" BorderBrush="DarkGray" BorderThickness="1" Width="250" PreviewKeyDown="processConsoleInput_PreviewKeyDown"/>
+                <Button Margin="5,0,0,0" Content="Send" Padding="5,1,5,1" Width="45" Click="ProcessSendButton_Click"/>
             </StackPanel>
         </Grid>
     </StackPanel>

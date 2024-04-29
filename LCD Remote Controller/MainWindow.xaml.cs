@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
-using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Timers;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,64 +18,65 @@ namespace LCD_Remote_Controller
     /// </summary>
     public partial class MainWindow : Window, IDisposable
     {
-        private const string configPath = "serial_config.json";
+        private const string configPath = "process_config.json";
         private const string consoleReadyPrompt = "\n> ";
 
-        private readonly SerialPort serialPort;
-        private readonly SerialConfig serialConfig;
+        private readonly Process process;
+        private readonly ProcessConfig processConfig;
 
-        private readonly Timer serialConsoleTimer = new(100);
+        private readonly CancellationTokenSource stdoutReadCancel = new();
+
+        private int stdoutReadStartIndex = 0;
 
         public MainWindow()
         {
             if (!File.Exists(configPath))
             {
-                serialConfig = new SerialConfig("COM5");
-                File.WriteAllText(configPath, JsonConvert.SerializeObject(serialConfig, Formatting.Indented));
+                processConfig = new ProcessConfig("LCDSimulator.GUI.exe");
+                File.WriteAllText(configPath, JsonConvert.SerializeObject(processConfig, Formatting.Indented));
 
-                _ = MessageBox.Show(this, $"Please edit {configPath} with your serial port settings, then launch the app again.",
+                _ = MessageBox.Show(this, $"Please edit {configPath} with your process settings, then launch the app again.",
                     "First time config", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 Environment.Exit(1);
             }
-            serialConfig = JsonConvert.DeserializeObject<SerialConfig>(File.ReadAllText(configPath));
+            processConfig = JsonConvert.DeserializeObject<ProcessConfig>(File.ReadAllText(configPath));
 
             try
             {
-                serialPort = new SerialPort(
-                    serialConfig.Device, serialConfig.BaudRate, serialConfig.ParityBits, serialConfig.DataBits, serialConfig.StopBits)
+                process = Process.Start(new ProcessStartInfo(processConfig.Path)
                 {
-                    NewLine = serialConfig.NewLine,
-                    RtsEnable = true,
-                    DtrEnable = true
-                };
-                serialPort.Open();
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                }) ?? throw new Exception();
 
-                serialPort.WriteLine("");
-                serialPort.DiscardOutBuffer();
-                serialPort.DiscardInBuffer();
+                process.StandardInput.AutoFlush = true;
 
-                serialPort.WriteLine("#help");
+                process.StandardInput.WriteLine("");
+
+                process.StandardInput.WriteLine("#help");
                 if (!Environment.GetCommandLineArgs().Contains("--no-init"))
                 {
-                    serialPort.WriteLine($"#set_size {serialConfig.LCDHeight} {serialConfig.LCDWidth}");
-                    serialPort.WriteLine("#init 2 8");
+                    process.StandardInput.WriteLine("#power 1");
+                    process.StandardInput.WriteLine($"#set_size {processConfig.LCDHeight} {processConfig.LCDWidth}");
+                    process.StandardInput.WriteLine("#init 2 8");
                 }
             }
             catch (Exception exc)
             {
-                _ = MessageBox.Show(this, $"There was an error communicating over the serial port. Please ensure that the settings in {configPath} are correct." +
-                    $"\n\n{exc}", "Serial communication error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _ = MessageBox.Show(this, $"There was an error communicating with the process. Please ensure that the settings in {configPath} are correct." +
+                    $"\n\n{exc}", "Process communication error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Environment.Exit(1);
             }
 
             InitializeComponent();
             SetDisplayOptions();
 
-            writeBox.Width = serialConfig.LCDWidth * 9 + 5;
-            writeBox.Height = serialConfig.LCDHeight * 20 + 5;
+            writeBox.Width = processConfig.LCDWidth * 9 + 5;
+            writeBox.Height = processConfig.LCDHeight * 20 + 5;
 
-            for (int i = 1; i <= serialConfig.LCDHeight; i++)
+            for (int i = 1; i <= processConfig.LCDHeight; i++)
             {
                 cursorLine.Items.Add(new ComboBoxItem()
                 {
@@ -82,7 +84,7 @@ namespace LCD_Remote_Controller
                 });
             }
 
-            for (int i = 0; i < serialConfig.LCDWidth; i++)
+            for (int i = 0; i < processConfig.LCDWidth; i++)
             {
                 cursorPosition.Items.Add(new ComboBoxItem()
                 {
@@ -90,8 +92,7 @@ namespace LCD_Remote_Controller
                 });
             }
 
-            serialConsoleTimer.Elapsed += SerialConsoleTimer_Elapsed;
-            serialConsoleTimer.Start();
+            _ = StartConsoleUpdateLoop();
         }
 
         ~MainWindow()
@@ -101,38 +102,56 @@ namespace LCD_Remote_Controller
 
         public void Dispose()
         {
-            serialPort.Dispose();
+            process.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        public void StartSerialInputCapture()
+        public async Task<string> ReadProcessOutput()
         {
-            serialConsoleTimer.Stop();
-            ReadSerialDataToConsole();
+            try
+            {
+                char[] buffer = new char[1024];
+                int numRead = await process.StandardOutput.ReadAsync(new Memory<char>(buffer, 0, 1024), stdoutReadCancel.Token);
+                return new string(buffer, 0, numRead);
+            }
+            catch (OperationCanceledException) { }
+
+            return "";
         }
 
-        public string EndSerialInputCapture(bool waitForCommandFinish)
+        public void StartProcessInputCapture()
         {
-            string newText = "";
-            do
-            {
-                newText += serialPort.ReadExisting();
-            } while (waitForCommandFinish && !newText.EndsWith(consoleReadyPrompt, StringComparison.Ordinal));
+            stdoutReadStartIndex = processConsole.Text.Length;
+        }
 
-            AddTextToConsole(newText);
-            serialConsoleTimer.Start();
+        public async Task<string> EndProcessInputCapture(bool waitForCommandFinish)
+        {
+            string newText = processConsole.Text[stdoutReadStartIndex..];
+            while (waitForCommandFinish && !newText.EndsWith(consoleReadyPrompt, StringComparison.Ordinal))
+            {
+                newText += processConsole.Text[(stdoutReadStartIndex + newText.Length)..];
+                await Task.Delay(50);
+            }
 
             return newText;
         }
 
-        public void ReadSerialDataToConsole()
+        public async Task StartConsoleUpdateLoop()
         {
-            AddTextToConsole(serialPort.ReadExisting());
+            while (!stdoutReadCancel.IsCancellationRequested)
+            {
+                await ReadProcessDataToConsole();
+            }
         }
 
-        public static string GetCommandOutput(string serialText)
+        public async Task ReadProcessDataToConsole()
         {
-            string[] lines = serialText.ReplaceLineEndings("\n").Replace(consoleReadyPrompt, "").Trim('\n').Split('\n');
+            AddTextToConsole(await ReadProcessOutput());
+        }
+
+        public static string GetCommandOutput(string processText)
+        {
+            string[] lines = processText.ReplaceLineEndings("\n").Replace(consoleReadyPrompt, "").Trim('\n').Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
                 lines[i] = lines[i].TrimEnd();
@@ -145,19 +164,19 @@ namespace LCD_Remote_Controller
         {
             if (text.Length > 0)
             {
-                serialConsole.Text += text;
-                serialConsoleScroll.ScrollToBottom();
+                processConsole.Text += text;
+                processConsoleScroll.ScrollToBottom();
             }
         }
 
         private void ClearDisplay_Click(object sender, RoutedEventArgs e)
         {
-            serialPort.WriteLine("#clear");
+            process.StandardInput.WriteLine("#clear");
         }
 
         private void ReturnHome_Click(object sender, RoutedEventArgs e)
         {
-            serialPort.WriteLine("#home");
+            process.StandardInput.WriteLine("#home");
         }
 
         private void SetDisplayOptions()
@@ -167,8 +186,8 @@ namespace LCD_Remote_Controller
             string blink = enableCursorBlinking.IsChecked ?? false ? "1" : "0";
             string backlight = enableBacklight.IsChecked ?? false ? "1" : "0";
 
-            serialPort.WriteLine($"#set {display} {cursor} {blink}");
-            serialPort.WriteLine($"#backlight {backlight}");
+            process.StandardInput.WriteLine($"#set {display} {cursor} {blink}");
+            process.StandardInput.WriteLine($"#backlight {backlight}");
         }
 
         private void DisplayOptions_Click(object sender, RoutedEventArgs e)
@@ -180,7 +199,7 @@ namespace LCD_Remote_Controller
         {
             if (sender is FrameworkElement sendingButton)
             {
-                serialPort.WriteLine($"#scroll {sendingButton.Tag}");
+                process.StandardInput.WriteLine($"#scroll {sendingButton.Tag}");
             }
         }
 
@@ -193,22 +212,23 @@ namespace LCD_Remote_Controller
                 while (line.StartsWith('#'))
                 {
                     // Leading '#' should be written manually so that the controller doesn't interpret the text as a command.
-                    serialPort.WriteLine("#raw_tx 1 00100011");
+                    process.StandardInput.WriteLine("#raw_tx 1 00100011");
                     skip++;
                 }
-                serialPort.WriteLine(line[skip..].TrimEnd('\n'));
-                if (line.Length != serialConfig.LCDWidth)
+                process.StandardInput.WriteLine(line[skip..].TrimEnd('\n'));
+                if (line.Length != processConfig.LCDWidth)
                 {
-                    serialPort.WriteLine("#newline");
+                    process.StandardInput.WriteLine("#newline");
                 }
             }
         }
 
-        private void TextRead_Click(object sender, RoutedEventArgs e)
+        // ReSharper disable once AsyncVoidMethod - WPF callback cannot be async Task
+        private async void TextRead_Click(object sender, RoutedEventArgs e)
         {
-            StartSerialInputCapture();
-            serialPort.WriteLine("#read");
-            string rawOutput = EndSerialInputCapture(true);
+            StartProcessInputCapture();
+            await process.StandardInput.WriteLineAsync("#read");
+            string rawOutput = await EndProcessInputCapture(true);
 
             writeBox.Text = GetCommandOutput(rawOutput);
         }
@@ -217,7 +237,7 @@ namespace LCD_Remote_Controller
         {
             if (sender is FrameworkElement sendingButton)
             {
-                serialPort.WriteLine($"#write_custom {sendingButton.Tag}");
+                process.StandardInput.WriteLine($"#write_custom {sendingButton.Tag}");
             }
         }
 
@@ -236,16 +256,17 @@ namespace LCD_Remote_Controller
                 }
             }
 
-            serialPort.WriteLine($"#def_custom {selectedChar} {pixelArray}");
+            process.StandardInput.WriteLine($"#def_custom {selectedChar} {pixelArray}");
         }
 
-        private void CustomCharLoad_Click(object sender, RoutedEventArgs e)
+        // ReSharper disable once AsyncVoidMethod - WPF callback cannot be async Task
+        private async void CustomCharLoad_Click(object sender, RoutedEventArgs e)
         {
             object? selectedChar = (customCharNumberPicker.SelectedItem as ComboBoxItem)?.Tag;
 
-            StartSerialInputCapture();
-            serialPort.WriteLine($"#read_custom {selectedChar}");
-            string rawOutput = EndSerialInputCapture(true);
+            StartProcessInputCapture();
+            await process.StandardInput.WriteLineAsync($"#read_custom {selectedChar}");
+            string rawOutput = await EndProcessInputCapture(true);
 
             string output = GetCommandOutput(rawOutput);
             if (output.Length == 0)
@@ -292,16 +313,17 @@ namespace LCD_Remote_Controller
             string d6Pin = d6.IsChecked ?? false ? "1" : "0";
             string d7Pin = d7.IsChecked ?? false ? "1" : "0";
 
-            serialPort.WriteLine($"#raw_tx {rsPin} {d7Pin}{d6Pin}{d5Pin}{d4Pin}{d3Pin}{d2Pin}{d1Pin}{d0Pin}");
+            process.StandardInput.WriteLine($"#raw_tx {rsPin} {d7Pin}{d6Pin}{d5Pin}{d4Pin}{d3Pin}{d2Pin}{d1Pin}{d0Pin}");
         }
 
-        private void ReceiveButton_Click(object sender, RoutedEventArgs e)
+        // ReSharper disable once AsyncVoidMethod - WPF callback cannot be async Task
+        private async void ReceiveButton_Click(object sender, RoutedEventArgs e)
         {
             string rsPin = rs.IsChecked ?? false ? "1" : "0";
 
-            StartSerialInputCapture();
-            serialPort.WriteLine($"#raw_rx {rsPin}");
-            string rawOutput = EndSerialInputCapture(true);
+            StartProcessInputCapture();
+            await process.StandardInput.WriteLineAsync($"#raw_rx {rsPin}");
+            string rawOutput = await EndProcessInputCapture(true);
 
             string output = GetCommandOutput(rawOutput);
             if (output.Length == 0)
@@ -346,14 +368,15 @@ namespace LCD_Remote_Controller
             object? selectedLine = (cursorLine.SelectedItem as ComboBoxItem)?.Content;
             object? selectedOffset = (cursorPosition.SelectedItem as ComboBoxItem)?.Content;
 
-            serialPort.WriteLine($"#setpos {selectedLine} {selectedOffset}");
+            process.StandardInput.WriteLine($"#setpos {selectedLine} {selectedOffset}");
         }
 
-        private void GetCursorButton_Click(object sender, RoutedEventArgs e)
+        // ReSharper disable once AsyncVoidMethod - WPF callback cannot be async Task
+        private async void GetCursorButton_Click(object sender, RoutedEventArgs e)
         {
-            StartSerialInputCapture();
-            serialPort.WriteLine("#getpos");
-            string rawOutput = EndSerialInputCapture(true);
+            StartProcessInputCapture();
+            await process.StandardInput.WriteLineAsync("#getpos");
+            string rawOutput = await EndProcessInputCapture(true);
 
             string output = GetCommandOutput(rawOutput);
             Match linePosMatch = Regex.Match(output, "line: ([0-9]+), offset: ([0-9]+)");
@@ -372,21 +395,16 @@ namespace LCD_Remote_Controller
             }
         }
 
-        private void SerialConsoleTimer_Elapsed(object? sender, ElapsedEventArgs e)
+        private void ProcessSendButton_Click(object sender, RoutedEventArgs e)
         {
-            Dispatcher.Invoke(ReadSerialDataToConsole);
+            process.StandardInput.WriteLine(processConsoleInput.Text);
         }
 
-        private void SerialSendButton_Click(object sender, RoutedEventArgs e)
-        {
-            serialPort.WriteLine(serialConsoleInput.Text);
-        }
-
-        private void serialConsoleInput_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void processConsoleInput_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                serialPort.WriteLine(serialConsoleInput.Text);
+                process.StandardInput.WriteLine(processConsoleInput.Text);
             }
         }
     }
